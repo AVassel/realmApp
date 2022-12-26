@@ -14,6 +14,7 @@ class TaskListViewController: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        createTempData()
         
         let addButton = UIBarButtonItem(
             barButtonSystemItem: .add,
@@ -23,8 +24,6 @@ class TaskListViewController: UITableViewController {
         
         navigationItem.rightBarButtonItem = addButton
         navigationItem.leftBarButtonItem = editButtonItem
-        
-        createTempData()
         
         taskLists = StorageManager.shared.realm.objects(TaskList.self)
     }
@@ -42,10 +41,7 @@ class TaskListViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "TaskListCell", for: indexPath)
         let taskList = taskLists[indexPath.row]
-        var content = cell.defaultContentConfiguration()
-        content.text = taskList.name
-        content.secondaryText = "\(taskList.tasks.count)"
-        cell.contentConfiguration = content
+        cell.configure(with: taskList)
 
         return cell
     }
@@ -89,6 +85,11 @@ class TaskListViewController: UITableViewController {
     }
 
     @IBAction func sortingList(_ sender: UISegmentedControl) {
+        taskLists = sender.selectedSegmentIndex == 0
+        ? taskLists.sorted(byKeyPath: "date")
+        : taskLists.sorted(byKeyPath: "name")
+        
+        tableView.reloadData()
     }
     
     @objc private func  addButtonPressed() {

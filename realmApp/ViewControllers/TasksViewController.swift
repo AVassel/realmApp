@@ -58,6 +58,43 @@ class TasksViewController: UITableViewController {
     @objc private func addButtonPressed() {
         showAlert()
     }
+    
+    override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let task = indexPath.section == 0
+        ? currentTasks[indexPath.row]
+        : completedTasks[indexPath.row]
+        
+        let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { _, _, _ in
+            StorageManager.shared.delete(task)
+            tableView.deleteRows(at: [indexPath], with: .automatic)
+        }
+        
+        let editAction = UIContextualAction(style: .normal, title: "Edit") { _, _, isDone in
+            self.showAlert(with: task) {
+                self.tableView.reloadRows(at: [indexPath], with: .automatic)
+            }
+            isDone(true)
+        }
+        
+        let doneTitle = indexPath.section == 0 ? "Done" : "Undone"
+        
+        let doneAction = UIContextualAction(style: .normal, title: doneTitle) { _, _, isDone in
+            StorageManager.shared.done(task)
+            let indexPathForCurrentTask = IndexPath(row: self.currentTasks.count-1, section: 0)
+            let indexPathForCompletedTask = IndexPath(row: self.completedTasks.count-1, section: 1)
+            let destinationIndexPath = indexPath.section == 0
+            ? indexPathForCompletedTask
+            : indexPathForCurrentTask
+            tableView.moveRow(at: indexPath, to: destinationIndexPath)
+            
+            isDone(true)
+        }
+        
+        editAction.backgroundColor = .orange
+        doneAction.backgroundColor = .green
+        
+        return UISwipeActionsConfiguration(actions: [doneAction, editAction, deleteAction])
+    }
 
 }
 
